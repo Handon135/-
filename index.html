@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>TITAN 서버 상태</title>
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+        }
+
+        h1 {
+            color: #333;
+            font-size: 36px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        #status, #players, #latency {
+            font-size: 20px;
+            margin: 15px 0;
+            color: #333;
+        }
+
+        #status {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        #players, #latency {
+            font-size: 18px;
+        }
+
+        .status-text {
+            color: #4CAF50;
+        }
+
+        .offline-text {
+            color: #FF5733;
+        }
+
+        #refresh-btn {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 18px;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-top: 30px;
+            transition: background-color 0.3s ease;
+        }
+
+        #refresh-btn:hover {
+            background-color: #45a049;
+        }
+
+        .loading {
+            color: #FFEB3B;
+        }
+
+    </style>
+</head>
+<body>
+    <h1>마인크래프트 서버 상태</h1>
+    <p id="status" class="loading">서버 상태: 로딩 중...</p>
+    <p id="players" class="loading">접속자 수: 로딩 중...</p>
+    <p id="latency" class="loading">핑: 로딩 중...</p>
+    <button id="refresh-btn">새로 고침</button>
+
+    <script>
+        async function checkServerStatus() {
+            document.getElementById('status').textContent = "서버 상태: 로딩 중...";
+            document.getElementById('players').textContent = "접속자 수: 로딩 중...";
+            document.getElementById('latency').textContent = "핑: 로딩 중...";
+
+            try {
+                const response = await fetch('https://api.mcstatus.io/v2/status/java/titanserver.kro.kr');
+                const data = await response.json();
+
+                // 서버 상태 업데이트
+                const statusText = data.online ? "서버가 온라인 상태입니다." : "서버가 오프라인 상태입니다.";
+                document.getElementById('status').textContent = statusText;
+                document.getElementById('status').className = data.online ? 'status-text' : 'offline-text';
+
+                // 접속자 수 업데이트
+                const players = data.players.online;
+                const maxPlayers = data.players.max;
+                document.getElementById('players').textContent = `접속자: ${players} / ${maxPlayers}`;
+
+                // 핑 업데이트 (핑 정보가 없는 경우 N/A로 표시)
+                const latency = data.latency !== undefined ? `${data.latency}ms` : "N/A";
+                document.getElementById('latency').textContent = `핑: ${latency}`;
+
+            } catch (error) {
+                document.getElementById('status').textContent = "서버 상태를 확인할 수 없습니다.";
+                document.getElementById('players').textContent = "접속자: N/A";
+                document.getElementById('latency').textContent = "핑: N/A";
+                document.getElementById('status').className = 'offline-text';
+            }
+        }
+
+        // 페이지 로드 시 서버 상태 확인
+        checkServerStatus();
+
+        // 새로 고침 버튼 클릭 시 서버 상태 업데이트
+        document.getElementById('refresh-btn').addEventListener('click', checkServerStatus);
+
+        // 3초마다 서버 상태 업데이트 (빠르게 업데이트)
+        setInterval(checkServerStatus, 3000);
+    </script>
+</body>
+</html>
